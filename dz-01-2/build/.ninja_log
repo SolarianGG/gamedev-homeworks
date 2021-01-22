@@ -1,0 +1,9 @@
+# ninja log v5
+0	114	1611342174045149829	hello_bin/CMakeFiles/hello_bin_dynamic.dir/src/main.cxx.o	9cff8bb4f23c66c9
+0	114	1611342174045149829	hello_bin/CMakeFiles/hello_bin_static.dir/src/main.cxx.o	1de7ef19caa73500
+1	318	1611342174249173637	hello_lib/CMakeFiles/hello_dynamic.dir/src/hello_lib.cxx.o	bf42c972f98e6f1a
+1	318	1611342174249173637	hello_lib/CMakeFiles/hello_static.dir/src/hello_lib.cxx.o	31c5645d4713563f
+318	332	1611342174265175504	hello_lib/libhello_static.a	18072ea4054b8252
+318	388	1611342174321182039	hello_lib/libhello_dynamic.so	f3eb0c32bb472947
+388	474	1611342174405191843	hello_bin/hello_bin_dynamic	a67c47e073d71d4d
+332	614	1611342174545208182	hello_bin/hello_bin_static	39fe0704470f2594
