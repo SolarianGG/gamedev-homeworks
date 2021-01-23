@@ -1,3 +1,3 @@
 Build Platform | Status
 :--------------|------:
-Linux |![passing](https://github.com/SolarianGG/gamedev-dz/workflows/solarian/badge.svg)
+Linux |![solarian](https://github.com/SolarianGG/gamedev-dz/workflows/solarian/badge.svg?branch=main)
