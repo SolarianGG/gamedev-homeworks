@@ -12,7 +12,12 @@ jobs:
               run: sudo apt update -y && sudo apt install -y ninja-build cmake
             - name: build
               run: |
-                mkdir build
-                cd build
+                mkdir dz-01-1/build
+                cd dz-01-1/build
+                cmake -G Ninja ..
+                cmake --build .
+                cd ../..
+                mkdir dz-01-2/build
+                cd dz-01-2/build
                 cmake -G Ninja ..
                 cmake --build .
