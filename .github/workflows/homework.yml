@@ -8,8 +8,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - name: setup ninja
-              run: sudo apt update -y && sudo apt install -y ninja-build cmake
+            - name: setup all libs
+              run: sudo apt update -y && sudo apt install -y ninja-build cmake libSDL2-dev
             - name: build
               run: |
                 mkdir build
