@@ -9,7 +9,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
             - name: setup all libs
-              run: sudo apt update -y && sudo apt install -y ninja-build cmake libSDL2-dev
+              run: sudo apt update -y && sudo apt install -y ninja-build cmake libsdl2-dev
             - name: build
               run: |
                 mkdir build
