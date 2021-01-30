@@ -8,8 +8,17 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - name: setup all libs
-              run: sudo apt update -y && sudo apt install -y ninja-build cmake libsdl2-dev
+            - name: setup ninja and cmake
+              run: sudo apt update -y && sudo apt install -y ninja-build cmake wget tar 
+            - name: setup sdl
+              run: |
+                wget https://www.libsdl.org/release/SDL2-2.0.14.tar.gz
+                tar -xvf SDL2-2.0.14.tar.gz
+                mkdir sdl_build
+                cd sdl_build
+                cmake -G Ninja ../SDL2-2.0.14
+                cmake --build .
+                sudo cmake --install .
             - name: build
               run: |
                 mkdir build
