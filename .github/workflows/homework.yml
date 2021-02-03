@@ -25,4 +25,5 @@ jobs:
                 cd build
                 cmake -G Ninja ..
                 cmake --install .
+            - name: test
                 ls
