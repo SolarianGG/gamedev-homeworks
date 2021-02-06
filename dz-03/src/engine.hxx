@@ -1,6 +1,4 @@
 #pragma once
-#include <SDL2/SDL.h>
-#include <iostream>
 #include <string_view>
 
 #define ENGINE_QUIT_EVENT "engine_quit"

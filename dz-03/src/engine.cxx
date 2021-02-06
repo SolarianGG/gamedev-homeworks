@@ -75,6 +75,18 @@ reload_game(game* old,
   using namespace std::filesystem;
 
   if (old != nullptr) {
+    void* destroy_game_func_ptr = SDL_LoadFunction(old_handle, "delete_game");
+    if (destroy_game_func_ptr == nullptr) {
+      std::cerr << "error: no function [delete_game] in " << library_name << " "
+                << SDL_GetError() << std::endl;
+      return nullptr;
+    }
+    typedef decltype(&delete_game) delete_game_ptr;
+
+    auto delete_game_func =
+      reinterpret_cast<delete_game_ptr>(destroy_game_func_ptr);
+
+    delete_game_func(old);
     SDL_UnloadObject(old_handle);
   }
 
@@ -223,31 +235,34 @@ main(int /*argc*/, char** /*argv*/)
   bool is_loop = true;
   while (is_loop) {
     using namespace std::filesystem;
-    auto current_loading_time = last_write_time(libenginename);
+    if (exists(libenginename)) {
+      auto current_loading_time = last_write_time(libenginename);
 
-    if (loading_time != current_loading_time) {
-      file_time_type next_loading_time;
-      for (;;) {
-        using namespace std::chrono;
-        std::this_thread::sleep_for(milliseconds(100));
-        next_loading_time = std::filesystem::last_write_time(libenginename);
-        if (next_loading_time != current_loading_time) {
-          current_loading_time = next_loading_time;
-        } else {
-          break;
+      if (loading_time != current_loading_time) {
+        file_time_type next_loading_time;
+        for (;;) {
+          using namespace std::chrono;
+          std::this_thread::sleep_for(milliseconds(100));
+          next_loading_time = std::filesystem::last_write_time(libenginename);
+          if (next_loading_time != current_loading_time) {
+            current_loading_time = next_loading_time;
+          } else {
+            break;
+          }
         }
+
+        std::cout << "reloading game" << std::endl;
+        g = reload_game(g, libenginename, tmp_lib, *e, handle);
+
+        if (g == nullptr) {
+          std::cerr << "next attemp to reload game..." << std::endl;
+          continue;
+        }
+
+        loading_time = next_loading_time;
       }
-
-      std::cout << "reloading game" << std::endl;
-      g = reload_game(g, libenginename, tmp_lib, *e, handle);
-
-      if (g == nullptr) {
-        std::cerr << "next attemp to reload game..." << std::endl;
-        continue;
-      }
-
-      loading_time = next_loading_time;
     }
+
     input in;
     while (e->read_input(in)) {
       if (in.event_type == ENGINE_QUIT_EVENT) {

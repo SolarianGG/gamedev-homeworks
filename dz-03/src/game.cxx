@@ -12,7 +12,7 @@ public:
   void on_event(input& in) override
   {
     using namespace std;
-    cout << in << "!" << endl;
+    cout << in << endl;
   }
   ~test_game() {}
 };
