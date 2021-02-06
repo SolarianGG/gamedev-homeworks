@@ -7,14 +7,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(SDL2 REQUIRED)
 
-add_library(engine SHARED
+add_executable(engine
     ${PROJECT_SOURCE_DIR}/src/engine.cxx
     ${PROJECT_SOURCE_DIR}/src/engine.hxx
     )
 
-add_executable(game
+set_target_properties(engine PROPERTIES
+    ENABLE_EXPORTS 1)
+
+add_library(game SHARED
     ${PROJECT_SOURCE_DIR}/src/game.cxx
-    ${PROJECT_SOURCE_DIR}/src/engine.hxx
     )
 
 target_link_libraries(engine PRIVATE SDL2::SDL2 SDL2::SDL2main)

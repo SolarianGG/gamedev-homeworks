@@ -1,33 +1,36 @@
-#include <SDL2/SDL.h>
-
 #include "engine.hxx"
-#include <array>
 #include <iostream>
-#include <string_view>
 
-int
-main(int /*argc*/, char** /*argv*/)
+class test_game : public game
 {
-  using namespace std;
-  engine* e = create_engine();
-  if (e == nullptr) {
-    cerr << "failed to initialize engine" << std::endl;
-    return 1;
-  }
+  engine& e;
 
-  bool is_loop = true;
-  while (is_loop) {
-    input in;
-    while (e->read_input(in)) {
-      if (in.event_type == ENGINE_QUIT_EVENT) {
-        is_loop = false;
-      } else if (in.key == "") {
-        continue;
-      } else {
-        cout << in << endl;
-      }
-    }
-  };
-  destroy_engine(e);
-  return 0;
+public:
+  explicit test_game(engine& e)
+    : e(e)
+  {}
+  void on_event(input& in) override
+  {
+    using namespace std;
+    cout << in << endl;
+  }
+  ~test_game() {}
+};
+
+game*
+create_game(engine* e)
+{
+  if (e == nullptr) {
+    return nullptr;
+  }
+  return new test_game(*e);
+}
+
+void
+delete_game(game* g)
+{
+  if (g == nullptr) {
+    return;
+  }
+  delete g;
 }

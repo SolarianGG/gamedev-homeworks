@@ -2,8 +2,10 @@
 
 #include <SDL2/SDL.h>
 #include <array>
+#include <filesystem>
 #include <iostream>
 #include <string_view>
+#include <thread>
 
 // Keyboard keys and variables
 
@@ -61,6 +63,66 @@ operator<<(std::ostream& out, input& e)
 {
   out << e.key << " is " << e.event_type;
   return out;
+}
+
+game*
+reload_game(game* old,
+            const char* library_name,
+            const char* tmp_library_name,
+            engine& engine,
+            void*& old_handle)
+{
+  using namespace std::filesystem;
+
+  if (old) {
+    SDL_UnloadObject(old_handle);
+  }
+
+  if (std::filesystem::exists(tmp_library_name)) {
+    if (0 != remove(tmp_library_name)) {
+      std::cerr << "error: can't remove: " << tmp_library_name << std::endl;
+      return nullptr;
+    }
+  }
+
+  try {
+    copy(library_name, tmp_library_name); // throw on error
+  } catch (const std::exception& ex) {
+    std::cerr << "error: can't copy [" << library_name << "] to ["
+              << tmp_library_name << "]" << std::endl;
+    return nullptr;
+  }
+
+  void* game_handle = SDL_LoadObject(library_name);
+
+  if (game_handle == nullptr) {
+    std::cerr << "error: failed to load: [" << library_name << "] "
+              << SDL_GetError() << std::endl;
+    return nullptr;
+  }
+
+  old_handle = game_handle;
+
+  void* create_game_func_ptr = SDL_LoadFunction(game_handle, "create_game");
+
+  if (create_game_func_ptr == nullptr) {
+    std::cerr << "error: no function [create_game] in " << library_name << " "
+              << SDL_GetError() << std::endl;
+    return nullptr;
+  }
+
+  typedef decltype(&create_game) create_game_ptr;
+
+  auto create_game_func =
+    reinterpret_cast<create_game_ptr>(create_game_func_ptr);
+
+  game* game = create_game_func(&engine);
+
+  if (game == nullptr) {
+    std::cerr << "error: func [create_game] returned: nullptr" << std::endl;
+    return nullptr;
+  }
+  return game;
 }
 
 // -------------------------------------------------------
@@ -133,3 +195,70 @@ engine::read_input(input& e)
 engine::~engine() {}
 
 // ----------------------------------------------------------------------
+
+int
+main(int /*argc*/, char** /*argv*/)
+{
+  using namespace std;
+  unique_ptr<engine, void (*)(engine*)> e(create_engine(), destroy_engine);
+  if (e == nullptr) {
+    cerr << "failed to initialize engine" << std::endl;
+    return 1;
+  }
+
+  const char* libenginename = "./libgame.so";
+
+  const char* tmp_lib = "./tmp.dll";
+
+  void* handle = {};
+
+  game* g = reload_game(nullptr, libenginename, tmp_lib, *e, handle);
+  if (g == nullptr) {
+    cerr << "failed to initialize game" << std::endl;
+    return 2;
+  }
+
+  auto loading_time = std::filesystem::last_write_time(libenginename);
+
+  bool is_loop = true;
+  while (is_loop) {
+    using namespace std::filesystem;
+    auto current_loading_time = last_write_time(libenginename);
+
+    if (loading_time != current_loading_time) {
+      file_time_type next_loading_time;
+      for (;;) {
+        using namespace std::chrono;
+        std::this_thread::sleep_for(milliseconds(100));
+        next_loading_time = std::filesystem::last_write_time(libenginename);
+        if (next_loading_time != current_loading_time) {
+          current_loading_time = next_loading_time;
+        } else {
+          break;
+        }
+      }
+
+      std::cout << "reloading game" << std::endl;
+      g = reload_game(g, libenginename, tmp_lib, *e, handle);
+
+      if (g == nullptr) {
+        std::cerr << "next attemp to reload game..." << std::endl;
+        continue;
+      }
+
+      loading_time = next_loading_time;
+    }
+    input in;
+    while (e->read_input(in)) {
+      if (in.event_type == ENGINE_QUIT_EVENT) {
+        is_loop = false;
+      } else if (in.key == "") {
+        continue;
+      } else {
+        g->on_event(in);
+      }
+    }
+  }
+
+  return 0;
+}
