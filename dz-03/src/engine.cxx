@@ -9,11 +9,12 @@
 
 // Keyboard keys and variables
 
-enum
-{
-  unitialize_index = -32000,
-  keys_count = 8
-};
+constexpr std::string_view engine_quit_event = "engine_quit";
+constexpr std::string_view engine_keyboard_pressed_event = "pressed";
+constexpr std::string_view engine_keyboard_released_event = "released";
+
+constexpr int unitialize_index = -1;
+constexpr int keys_count = 8;
 
 struct keyboard_bind
 {
@@ -75,23 +76,26 @@ reload_game(game* old,
   using namespace std::filesystem;
 
   if (old != nullptr) {
-    void* destroy_game_func_ptr = SDL_LoadFunction(old_handle, "delete_game");
-    if (destroy_game_func_ptr == nullptr) {
+    void* delete_game_func_ptr = SDL_LoadFunction(old_handle, "delete_game");
+    if (delete_game_func_ptr == nullptr) {
       std::cerr << "error: no function [delete_game] in " << library_name << " "
                 << SDL_GetError() << std::endl;
       return nullptr;
     }
+    // We use decltype to find out what type return' our function
     typedef decltype(&delete_game) delete_game_ptr;
 
+    // We use reinterpret_cast for hard polymorph of return value of our
+    // function
     auto delete_game_func =
-      reinterpret_cast<delete_game_ptr>(destroy_game_func_ptr);
+      reinterpret_cast<delete_game_ptr>(delete_game_func_ptr);
 
     delete_game_func(old);
     SDL_UnloadObject(old_handle);
   }
 
   if (std::filesystem::exists(tmp_library_name)) {
-    if (0 != remove(tmp_library_name)) {
+    if (0 == remove(tmp_library_name)) {
       std::cerr << "error: can't remove: " << tmp_library_name << std::endl;
       return nullptr;
     }
@@ -112,7 +116,6 @@ reload_game(game* old,
               << SDL_GetError() << std::endl;
     return nullptr;
   }
-
   old_handle = game_handle;
 
   void* create_game_func_ptr = SDL_LoadFunction(game_handle, "create_game");
@@ -122,9 +125,10 @@ reload_game(game* old,
               << SDL_GetError() << std::endl;
     return nullptr;
   }
-
+  // We use decltype to find out what type return' our function
   typedef decltype(&create_game) create_game_ptr;
 
+  // We use reinterpret_cast for hard polymorph of return value of our function
   auto create_game_func =
     reinterpret_cast<create_game_ptr>(create_game_func_ptr);
 
@@ -143,6 +147,8 @@ reload_game(game* old,
 engine*
 create_engine()
 {
+
+  // compares compiled and dynamic linked SDL lib
   SDL_version compiled, linked;
   SDL_VERSION(&compiled);
   SDL_GetVersion(&linked);
@@ -156,6 +162,7 @@ create_engine()
     return nullptr;
   }
 
+  // Creating simple window for reading input
   SDL_Window* window = SDL_CreateWindow("Game",
                                         SDL_WINDOWPOS_CENTERED,
                                         SDL_WINDOWPOS_CENTERED,
@@ -167,7 +174,7 @@ create_engine()
     SDL_Quit();
     return nullptr;
   }
-
+  // In this code we specially lose our window to facilitate our engine impl
   return new engine();
 }
 
@@ -193,11 +200,11 @@ engine::read_input(input& e)
   if (SDL_PollEvent(&event)) {
     e.key = check_key(event);
     if (event.type == SDL_KEYDOWN) {
-      e.event_type = ENGINE_KEYBOARD_KEY_PRESSED;
+      e.event_type = engine_keyboard_pressed_event;
     } else if (event.type == SDL_KEYUP) {
-      e.event_type = ENGINE_KEYBOARD_KEY_RELEASED;
+      e.event_type = engine_keyboard_released_event;
     } else if (event.type == SDL_QUIT) {
-      e.event_type = ENGINE_QUIT_EVENT;
+      e.event_type = engine_quit_event;
     }
     return true;
   }
@@ -265,11 +272,12 @@ main(int /*argc*/, char** /*argv*/)
 
     input in;
     while (e->read_input(in)) {
-      if (in.event_type == ENGINE_QUIT_EVENT) {
+      if (in.event_type == engine_quit_event) {
         is_loop = false;
       } else if (in.key == "") {
         continue;
-      } else {
+      } else if (in.event_type == engine_keyboard_pressed_event ||
+                 in.event_type == engine_keyboard_released_event) {
         g->on_event(in);
       }
     }

@@ -1,10 +1,6 @@
 #pragma once
 #include <string_view>
 
-#define ENGINE_QUIT_EVENT "engine_quit"
-#define ENGINE_KEYBOARD_KEY_PRESSED "pressed"
-#define ENGINE_KEYBOARD_KEY_RELEASED "released"
-
 struct input
 {
   std::string_view key;

@@ -3,7 +3,7 @@
 
 class test_game : public game
 {
-  engine& e;
+  engine& e; // We can easily remove this field but i don't want to do it
 
 public:
   explicit test_game(engine& e)
