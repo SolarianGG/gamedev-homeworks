@@ -65,7 +65,7 @@ operator<<(std::ostream& out, input& e)
   return out;
 }
 
-game*
+static game*
 reload_game(game* old,
             const char* library_name,
             const char* tmp_library_name,
@@ -74,7 +74,7 @@ reload_game(game* old,
 {
   using namespace std::filesystem;
 
-  if (old) {
+  if (old != nullptr) {
     SDL_UnloadObject(old_handle);
   }
 
@@ -208,7 +208,7 @@ main(int /*argc*/, char** /*argv*/)
 
   const char* libenginename = "./libgame.so";
 
-  const char* tmp_lib = "./tmp.dll";
+  const char* tmp_lib = "./temp.so";
 
   void* handle = {};
 
