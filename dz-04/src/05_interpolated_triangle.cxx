@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+
 #include <vector>
 
 static int
@@ -20,15 +21,6 @@ static double
 interpolate(const int f0, const int f1, const double t)
 {
   return f0 + (f1 - f0) * t;
-}
-
-static color
-interpolate(const color f0, const color f1, const double t)
-{
-  color c = { static_cast<uint8_t>(interpolate(f0.r, f1.r, t)),
-              static_cast<uint8_t>(interpolate(f0.g, f1.g, t)),
-              static_cast<uint8_t>(interpolate(f0.b, f1.b, t)) };
-  return c;
 }
 
 void
@@ -56,11 +48,11 @@ interpolated_triangle_render::add_triangle(const vertex& v0,
   index_buffer.push_back(index);
 }
 
-std::vector<vertex>&
+std::vector<position>&
 interpolated_triangle_render::get_pixels_positions(vertex start_vertex,
                                                    vertex end_vertex)
 {
-  std::vector<vertex>* points = new std::vector<vertex>();
+  std::vector<position>* points = new std::vector<position>();
 
   position start = start_vertex.pos;
   position end = end_vertex.pos;
@@ -100,7 +92,7 @@ interpolated_triangle_render::get_pixels_positions(vertex start_vertex,
       position pos;
       pos.x = x;
       pos.y = y;
-      points->push_back(vertex{ pos, { 0, 0, 0 } });
+      points->push_back(pos);
       error += deltaerr;
       if (error >= deltaX + 1) {
         y += diry;
@@ -128,12 +120,11 @@ interpolated_triangle_render::get_pixels_positions(vertex start_vertex,
       dirx = 1;
     else if (dirx < 0)
       dirx = -1;
-    for (int y = y0, i = 0; y <= y1; y++, i++) {
-      double t_vertical = static_cast<double>(i) / (y1 - y0);
-      vertex ver;
-      ver.pos = { x, y };
-      ver.col = interpolate(end_vertex.col, start_vertex.col, t_vertical);
-      points->push_back(ver);
+    for (int y = y0; y <= y1; y++) {
+      position pos;
+      pos.x = x;
+      pos.y = y;
+      points->push_back(pos);
       error += deltaerr;
       if (error >= deltaY + 1) {
         x += dirx;
@@ -143,6 +134,13 @@ interpolated_triangle_render::get_pixels_positions(vertex start_vertex,
   }
 
   return *points;
+}
+
+void
+interpolated_triangle_render::clear_buffers()
+{
+  vertex_buffer.clear();
+  index_buffer.clear();
 }
 
 static vertex
@@ -160,6 +158,8 @@ interpolate(const vertex& v0, const vertex& v1, const double t)
 void
 interpolated_triangle_render::set_gfx_program(shader_program* prog)
 {
+  if (gfx && prog)
+    delete gfx;
   if (prog)
     gfx = prog;
 }
@@ -169,18 +169,19 @@ interpolated_triangle_render::rasterize_horizontal_line(
   const vertex& left_vertex,
   const vertex& right_vertex)
 {
-  auto& pixels = get_pixels_positions(left_vertex, right_vertex);
-  if (pixels.size() > 0) {
-    for (size_t i = 0; i < pixels.size(); i++) {
-      double t_pixel = static_cast<double>(i) / pixels.size();
+  int nums_of_x = abs(right_vertex.pos.x - left_vertex.pos.x);
+  std::vector<vertex>* pixels = new std::vector<vertex>();
+  if (nums_of_x > 0) {
+    for (int i = 0; i < nums_of_x + 1; i++) {
+      double t_pixel = static_cast<double>(i) / (nums_of_x + 1);
       vertex pixel = interpolate(left_vertex, right_vertex, t_pixel);
 
-      pixels.at(i) = pixel;
+      pixels->push_back(pixel);
     }
   } else {
-    pixels.push_back(left_vertex);
+    pixels->push_back(left_vertex);
   }
-  return pixels;
+  return *pixels;
 }
 
 std::vector<vertex>&
@@ -194,8 +195,8 @@ interpolated_triangle_render::rasterize_horizontal_triangle(
   int count_of_lines = abs(single_vertex.pos.y - left_vertex.pos.y);
 
   if (count_of_lines > 0) {
-    for (int i = 0; i < count_of_lines; i++) {
-      double t_vertical = static_cast<double>(i) / count_of_lines;
+    for (int i = 0; i < count_of_lines + 1; i++) {
+      double t_vertical = static_cast<double>(i) / (count_of_lines + 1);
       vertex right = interpolate(right_vertex, single_vertex, t_vertical);
 
       vertex left = interpolate(left_vertex, single_vertex, t_vertical);
@@ -212,38 +213,15 @@ interpolated_triangle_render::rasterize_horizontal_triangle(
     *pixels = rasterize_horizontal_line(left_vertex, right_vertex);
   }
 
-  /* auto& left_line = get_pixels_positions(left_vertex, single_vertex);
-
-   auto& right_line = get_pixels_positions(right_vertex, single_vertex);
-
-   for (int i = 0; i < count_of_lines; i++) {
-
-     const auto left =
-       find_if(left_line.begin(), left_line.end(), [&](const vertex& vert) {
-         return vert.pos.y == left_line.at(0).pos.y + i;
-       });
-     const auto right =
-       find_if(right_line.begin(), right_line.end(), [&](const vertex& vert) {
-         return vert.pos.y == right_line.at(0).pos.y + i;
-       });
-
-     std::vector<vertex> ver = rasterize_horizontal_line(*left, *right);
-
-     for (auto l : ver) {
-       pixels->push_back(l);
-     }
-   }*/
-
   return *pixels;
 }
 
-std::vector<vertex>
+std::vector<vertex>&
 interpolated_triangle_render::rasterize_triangle(const vertex& v0,
                                                  const vertex& v1,
                                                  const vertex& v2)
 {
   using namespace std;
-  vector<vertex> out;
 
   array<const vertex*, 3> vertexes = { &v0, &v1, &v2 };
   sort(begin(vertexes),
@@ -260,8 +238,8 @@ interpolated_triangle_render::rasterize_triangle(const vertex& v0,
 
   vertex second_middle;
   for (auto l : top_to_bottop) {
-    if (l.pos.y == middle.pos.y) {
-      second_middle = l;
+    if (l.y == middle.pos.y) {
+      second_middle.pos = l;
       break;
     }
   }
@@ -274,14 +252,14 @@ interpolated_triangle_render::rasterize_triangle(const vertex& v0,
   }
   second_middle = interpolate(top, bottom, t);
 
-  auto& top_triangle =
-    rasterize_horizontal_triangle(top, middle, second_middle);
-  auto& bottom_triangle =
+  vector<vertex>* out = new vector<vertex>();
+  auto top_triangle = rasterize_horizontal_triangle(top, middle, second_middle);
+  auto bottom_triangle =
     rasterize_horizontal_triangle(bottom, middle, second_middle);
 
-  out.insert(out.end(), top_triangle.begin(), top_triangle.end());
-  out.insert(out.end(), bottom_triangle.begin(), bottom_triangle.end());
-  return out;
+  out->insert(out->end(), top_triangle.begin(), top_triangle.end());
+  out->insert(out->end(), bottom_triangle.begin(), bottom_triangle.end());
+  return *out;
 }
 
 void
@@ -309,7 +287,8 @@ interpolated_triangle_render::draw_triangles()
     const vertex v1i = gfx->vertex_shader(v1);
     const vertex v2i = gfx->vertex_shader(v2);
 
-    const std::vector<vertex>& pixels = rasterize_triangle(v0i, v1i, v2i);
+    std::vector<vertex>& pixels = rasterize_triangle(v0i, v1i, v2i);
     draw_triangle(pixels);
+    delete &pixels;
   }
 }

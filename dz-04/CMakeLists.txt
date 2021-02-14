@@ -5,6 +5,8 @@ project(basicrender CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+find_package(SDL2 REQUIRED)
+
 add_executable(00_basic_canvas
     ${PROJECT_SOURCE_DIR}/src/00_basic_canvas.cxx
     ${PROJECT_SOURCE_DIR}/src/00_basic_canvas.hxx
@@ -63,3 +65,13 @@ add_executable(05_interpolated_triangle
     ${PROJECT_SOURCE_DIR}/src/05_interpolated_triangle.hxx
     ${PROJECT_SOURCE_DIR}/src/05_interpolated_triangle_main.cxx
     )
+
+add_executable(06_my_own_shader
+    ${PROJECT_SOURCE_DIR}/src/00_basic_canvas.hxx
+    ${PROJECT_SOURCE_DIR}/src/00_basic_canvas.cxx
+    ${PROJECT_SOURCE_DIR}/src/05_interpolated_triangle.cxx
+    ${PROJECT_SOURCE_DIR}/src/05_interpolated_triangle.hxx
+    ${PROJECT_SOURCE_DIR}/src/06_my_own_shader_main.cxx
+    )
+
+target_link_libraries(06_my_own_shader PRIVATE SDL2::SDL2 SDL2::SDL2main)

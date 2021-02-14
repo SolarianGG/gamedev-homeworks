@@ -6,6 +6,8 @@ struct vertex
 {
   position pos = { 0, 0 };
   color col = { 0, 0, 0 };
+  double u = 0.0;
+  double v = 0.0;
 };
 
 struct uniforms
@@ -54,7 +56,7 @@ public:
   void draw_triangles();
 
 private:
-  std::vector<vertex>& get_pixels_positions(vertex start, vertex end);
+  std::vector<position>& get_pixels_positions(vertex start, vertex end);
   std::vector<vertex>& rasterize_horizontal_line(const vertex& left_vertex,
                                                  const vertex& right_vertex);
 
@@ -63,7 +65,7 @@ private:
     const vertex& left_vertex,
     const vertex& right_vertex);
 
-  std::vector<vertex> rasterize_triangle(const vertex& v0,
-                                         const vertex& v1,
-                                         const vertex& v2);
+  std::vector<vertex>& rasterize_triangle(const vertex& v0,
+                                          const vertex& v1,
+                                          const vertex& v2);
 };
