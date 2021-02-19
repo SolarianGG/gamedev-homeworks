@@ -7,7 +7,9 @@ int
 main(int /*argc*/, char** /*argv*/)
 {
 
-  triangle_render rend(new image());
+  uint16_t width = 320;
+  uint16_t height = 240;
+  triangle_render rend(new image(width, height));
   rend.clear(black);
   rend.draw_triangle(position{ 0, 0 },
                      position{ width - 1, height - 1 },

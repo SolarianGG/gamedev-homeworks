@@ -1,11 +1,8 @@
 #pragma once
-#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-
-constexpr size_t width = 320;
-constexpr size_t height = 240;
+#include <vector>
 
 #pragma pack(push, 1)
 struct color
@@ -23,20 +20,30 @@ const constexpr color green = { 0, 255, 0 };
 const constexpr color blue = { 0, 0, 255 };
 const constexpr color white = { 255, 255, 255 };
 
-const size_t buffer_size = width * height;
-
 class image
 {
-  std::array<color, buffer_size> pixels;
+  uint16_t width;
+  uint16_t height;
+  std::vector<color> pixels;
 
 public:
+  image(size_t width, size_t height)
+  {
+    this->width = width;
+    this->height = height;
+    for (int i = 0; i < width * height; i++) {
+      pixels.push_back(color{ 0, 0, 0 });
+    }
+  }
   bool save_image(const char* file_name);
   bool load_image(const char* file_name);
   color& get_pixel(size_t x, size_t y);
   void set_pixel(size_t x, size_t y, const color& rgb);
-  std::array<color, buffer_size>& get_pixels();
+  std::vector<color>& get_pixels();
   bool operator==(const image& canvas) const;
   bool operator!=(const image& canvas) const;
+  uint16_t get_width() { return width; }
+  uint16_t get_height() { return height; }
 };
 
 struct position

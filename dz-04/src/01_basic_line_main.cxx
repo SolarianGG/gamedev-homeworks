@@ -6,12 +6,10 @@ const char file_name[] = "01_basic_line.ppm";
 int
 main(int /*argc*/, char** /*argv*/)
 {
-  color black = { 0, 0, 0 };
-  color red = { 255, 0, 0 };
-  color green = { 0, 255, 0 };
-  color blue = { 0, 0, 255 };
 
-  line_render rend(new image());
+  uint16_t width = 320;
+  uint16_t height = 240;
+  line_render rend(new image(width, height));
   rend.clear(black);
   rend.draw_line(position{ 0, 0 }, position{ 0, height - 1 }, blue);
   rend.draw_line(position{ 0, 0 }, position{ width - 1, 0 }, green);

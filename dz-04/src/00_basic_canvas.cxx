@@ -1,8 +1,8 @@
 #include "00_basic_canvas.hxx"
 
-#include <array>
 #include <fstream>
 #include <string_view>
+#include <vector>
 
 bool
 operator==(const color& c, const color& c2)
@@ -36,7 +36,7 @@ image::save_image(const char* file_name)
   f.open(file_name, ios::binary);
   f << "P6\n" << width << ' ' << height << '\n' << 255 << '\n';
   auto buff_size = sizeof(color) * this->pixels.size();
-  f.write(reinterpret_cast<const char*>(&this->pixels), buff_size);
+  f.write(reinterpret_cast<const char*>(this->pixels.data()), buff_size);
   f.close();
   return f.good() ? true : false;
 }
@@ -69,7 +69,7 @@ image::set_pixel(size_t x, size_t y, const color& rgb)
   get_pixel(x, y) = rgb;
 }
 
-std::array<color, buffer_size>&
+std::vector<color>&
 image::get_pixels()
 {
   return this->pixels;

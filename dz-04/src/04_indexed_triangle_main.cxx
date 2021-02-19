@@ -6,7 +6,10 @@ const char file_name[] = "04_indexed_triangle_buffer.ppm";
 int
 main(int /*argc*/, char** /*argv*/)
 {
-  indexed_triangle_render rend(new image());
+
+  uint16_t width = 320;
+  uint16_t height = 240;
+  indexed_triangle_render rend(new image(width, height));
   rend.clear(black);
 
   int max = 10;

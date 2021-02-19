@@ -16,23 +16,33 @@ public:
   vertex vertex_shader(const vertex& v_in) override
   {
     vertex ver = v_in;
+    int mouse_x = uniform.f0;
+    int mouse_y = uniform.f1;
+    int left_x = uniform.f2;
+    int right_x = uniform.f3;
+    int top_y = uniform.f4;
+    int bot_y = uniform.f5;
+    if (mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y &&
+        mouse_y <= bot_y) {
+      ver.col = blue;
+    }
     return ver;
   }
 
   color fragment_shader(const vertex& v_in) override
   {
     color c = v_in.col;
-    int mouse_x = uniform.f0;
-    int mouse_y = uniform.f1;
-    int radius = uniform.f2;
-    int dx = mouse_x - v_in.pos.x;
-    int dy = mouse_y - v_in.pos.y;
-    if (dx * dx + dy * dy < radius * radius) {
-      double gray = 0.21 * c.r + 0.72 * c.g + 0.07 * c.b;
-      c.r = gray;
-      c.g = gray;
-      c.b = gray;
-    }
+    /* int mouse_x = uniform.f0;
+     int mouse_y = uniform.f1;
+     int radius = uniform.f2;
+     int dx = mouse_x - v_in.pos.x;
+     int dy = mouse_y - v_in.pos.y;
+     if (dx * dx + dy * dy < radius * radius) {
+       double gray = 0.21 * c.r + 0.72 * c.g + 0.07 * c.b;
+       c.r = gray;
+       c.g = gray;
+       c.b = gray;
+     }*/
     return c;
   }
 };
@@ -40,11 +50,14 @@ public:
 int
 main(int /*argc*/, char** /*argv*/)
 {
-
+  interpolated_triangle_render interpolated_renderer(new image(320, 240));
   if (0 != SDL_Init(SDL_INIT_EVERYTHING)) {
     std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
     return 1;
   }
+
+  auto width = interpolated_renderer.get_img().get_width();
+  auto height = interpolated_renderer.get_img().get_height();
 
   SDL_Window* window = SDL_CreateWindow("MyOwnShader",
                                         SDL_WINDOWPOS_CENTERED,
@@ -69,17 +82,50 @@ main(int /*argc*/, char** /*argv*/)
     return 3;
   }
 
-  interpolated_triangle_render interpolated_renderer;
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
+                                     vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
+                                     vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 100, 10 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
+                                     vertex{ position{ 200, 10 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 60, 40 }, red },
+                                     vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 100, 10 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 240, 40 }, red },
+                                     vertex{ position{ 200, 10 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
+                                     vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
+                                     vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 30, 120 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 125, 50 }, red },
+                                     vertex{ position{ 60, 40 }, red },
+                                     vertex{ position{ 30, 120 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
+                                     vertex{ position{ 75, 160 }, red },
+                                     vertex{ position{ 30, 120 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
+                                     vertex{ position{ 270, 120 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 240, 40 }, red },
+                                     vertex{ position{ 270, 120 }, red },
+                                     vertex{ position{ 175, 50 }, red });
+  interpolated_renderer.add_triangle(vertex{ position{ 220, 160 }, red },
+                                     vertex{ position{ 270, 120 }, red },
+                                     vertex{ position{ 150, 180 }, red });
 
-  interpolated_renderer.add_triangle(
-    vertex{ position{ 0, 0 }, color{ 255, 0, 0 } },
-    vertex{ position{ 0, height - 1 }, color{ 0, 255, 0 } },
-    vertex{ position{ width - 1, height - 1 }, color{ 0, 0, 255 } });
-
-  int radius = 20;
+  int left_x = 30;
+  int right_x = 270;
+  int top_y = 10;
+  int bot_y = 180;
   int mouse_x = 0;
   int mouse_y = 0;
-  uniforms un = { mouse_x, mouse_y, radius };
+  uniforms un = { mouse_x, mouse_y, left_x, right_x, top_y, bot_y };
 
   gfx_program* gfx = new gfx_program();
   gfx->set_uniforms(un);
@@ -107,7 +153,8 @@ main(int /*argc*/, char** /*argv*/)
 
     interpolated_renderer.clear(black);
 
-    gfx->set_uniforms(uniforms{ mouse_x, mouse_y, radius });
+    gfx->set_uniforms(
+      uniforms{ mouse_x, mouse_y, left_x, right_x, top_y, bot_y });
 
     interpolated_renderer.draw_triangles();
 

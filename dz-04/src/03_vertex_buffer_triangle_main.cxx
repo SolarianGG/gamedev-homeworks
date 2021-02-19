@@ -6,7 +6,9 @@ const char file_name[] = "03_vertex_triangles.ppm";
 int
 main(int /*argc*/, char** /*argv*/)
 {
-  vertex_buffer_triangle_render rend(new image());
+  uint16_t width = 320;
+  uint16_t height = 240;
+  vertex_buffer_triangle_render rend(new image(width, height));
   rend.clear(black);
 
   int max = 10;

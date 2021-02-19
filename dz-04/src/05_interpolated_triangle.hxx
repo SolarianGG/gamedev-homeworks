@@ -34,12 +34,12 @@ public:
 class interpolated_triangle_render : public irender
 {
   shader_program* gfx;
-  std::vector<vertex>& vertex_buffer;
-  std::vector<uint16_t>& index_buffer;
+  std::vector<vertex> vertex_buffer;
+  std::vector<uint16_t> index_buffer;
 
 public:
   interpolated_triangle_render(
-    image* canvas = new image(),
+    image* canvas = new image(320, 240),
     shader_program* sh = nullptr,
     std::vector<vertex>* vertex_buffer = new std::vector<vertex>,
     std::vector<uint16_t>* index_buffer = new std::vector<uint16_t>)
@@ -50,22 +50,21 @@ public:
   {}
 
   void draw_triangle(const std::vector<vertex>& pixels);
-  void add_triangle(const vertex& v0, const vertex& v1, const vertex& v2);
+  void add_triangle(const vertex v0, const vertex v1, const vertex v2);
   void set_gfx_program(shader_program* prog);
   void clear_buffers();
   void draw_triangles();
 
 private:
-  std::vector<position>& get_pixels_positions(vertex start, vertex end);
-  std::vector<vertex>& rasterize_horizontal_line(const vertex& left_vertex,
-                                                 const vertex& right_vertex);
+  std::vector<position> get_pixels_positions(vertex start, vertex end);
+  std::vector<vertex> rasterize_horizontal_line(const vertex left_vertex,
+                                                const vertex right_vertex);
 
-  std::vector<vertex>& rasterize_horizontal_triangle(
-    const vertex& single_vertex,
-    const vertex& left_vertex,
-    const vertex& right_vertex);
+  std::vector<vertex> rasterize_horizontal_triangle(const vertex single_vertex,
+                                                    const vertex left_vertex,
+                                                    const vertex right_vertex);
 
-  std::vector<vertex>& rasterize_triangle(const vertex& v0,
-                                          const vertex& v1,
-                                          const vertex& v2);
+  std::vector<vertex> rasterize_triangle(const vertex v0,
+                                         const vertex v1,
+                                         const vertex v2);
 };
