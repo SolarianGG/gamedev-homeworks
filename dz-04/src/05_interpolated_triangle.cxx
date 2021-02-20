@@ -5,6 +5,7 @@
 
 #include <vector>
 
+// This function checks value in arr, if exists return index
 static int
 exists(std::vector<vertex>& arr, vertex value)
 {
@@ -17,11 +18,15 @@ exists(std::vector<vertex>& arr, vertex value)
   return -1;
 }
 
+// Funcion of interpolation
+
 static double
 interpolate(const int f0, const int f1, const double t)
 {
   return f0 + (f1 - f0) * t;
 }
+
+// This function add indexes and vertexes in buffers
 
 void
 interpolated_triangle_render::add_triangle(const vertex v0,
@@ -47,6 +52,8 @@ interpolated_triangle_render::add_triangle(const vertex v0,
   }
   index_buffer.push_back(index);
 }
+
+// Get pixels positions in algorith of Brezenheim
 
 std::vector<position>
 interpolated_triangle_render::get_pixels_positions(vertex start_vertex,
@@ -222,7 +229,7 @@ interpolated_triangle_render::rasterize_triangle(const vertex v0,
                                                  const vertex v2)
 {
   using namespace std;
-
+  vector<vertex> out;
   array<const vertex*, 3> vertexes = { &v0, &v1, &v2 };
   sort(begin(vertexes),
        end(vertexes),
@@ -252,7 +259,6 @@ interpolated_triangle_render::rasterize_triangle(const vertex v0,
   }
   second_middle = interpolate(top, bottom, t);
 
-  vector<vertex> out;
   auto top_triangle = rasterize_horizontal_triangle(top, middle, second_middle);
   auto bottom_triangle =
     rasterize_horizontal_triangle(bottom, middle, second_middle);

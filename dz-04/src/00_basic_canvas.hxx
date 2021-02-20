@@ -19,6 +19,7 @@ const constexpr color red = { 255, 0, 0 };
 const constexpr color green = { 0, 255, 0 };
 const constexpr color blue = { 0, 0, 255 };
 const constexpr color white = { 255, 255, 255 };
+const constexpr color grey = { 133, 133, 133 };
 
 class image
 {

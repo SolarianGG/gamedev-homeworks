@@ -10,6 +10,19 @@ struct vertex
   double v = 0.0;
 };
 
+struct edges
+{
+  position f0 = { 0, 0 };
+  position f1 = { 0, 0 };
+  position f2 = { 0, 0 };
+  position f3 = { 0, 0 };
+  position f4 = { 0, 0 };
+  position f5 = { 0, 0 };
+  position f6 = { 0, 0 };
+  position f7 = { 0, 0 };
+  position f8 = { 0, 0 };
+};
+
 struct uniforms
 {
   int f0 = 0;
@@ -20,6 +33,8 @@ struct uniforms
   int f5 = 0;
   int f6 = 0;
   int f7 = 0;
+  edges edg;
+  uint32_t event_type;
 };
 
 class shader_program

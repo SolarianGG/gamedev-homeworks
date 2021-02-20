@@ -4,7 +4,6 @@
 #include <SDL2/SDL.h>
 #include <cstdlib>
 #include <iostream>
-#include <thread>
 
 struct gfx_program : public shader_program
 {
@@ -24,8 +23,33 @@ public:
     int bot_y = uniform.f5;
     if (mouse_x >= left_x && mouse_x <= right_x && mouse_y >= top_y &&
         mouse_y <= bot_y) {
-      ver.col = blue;
+      ver.col = red;
+
+      if (uniform.event_type == SDL_MOUSEBUTTONDOWN) {
+        if (ver.pos == uniform.edg.f0) {
+          ver.pos.y += 20;
+
+        } else if (ver.pos == uniform.edg.f1) {
+
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f2) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f3) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f4) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f5) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f6) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f7) {
+          ver.pos.y -= 20;
+        } else if (ver.pos == uniform.edg.f8) {
+          ver.pos.y -= 20;
+        }
+      }
     }
+
     return ver;
   }
 
@@ -81,51 +105,47 @@ main(int /*argc*/, char** /*argv*/)
     SDL_Quit();
     return 3;
   }
+  // left side of heart
+  interpolated_renderer.add_triangle(vertex{ position{ 80, 60 }, grey },
+                                     vertex{ position{ 100, 30 }, grey },
+                                     vertex{ position{ 120, 60 }, grey });
+  interpolated_renderer.add_triangle(vertex{ position{ 140, 30 }, grey },
+                                     vertex{ position{ 100, 30 }, grey },
+                                     vertex{ position{ 120, 60 }, grey });
+  interpolated_renderer.add_triangle(vertex{ position{ 140, 30 }, grey },
+                                     vertex{ position{ 160, 60 }, grey },
+                                     vertex{ position{ 120, 60 }, grey });
 
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
-                                     vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
-                                     vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 100, 10 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 30 }, red },
-                                     vertex{ position{ 200, 10 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 60, 40 }, red },
-                                     vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 100, 10 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 240, 40 }, red },
-                                     vertex{ position{ 200, 10 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
-                                     vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
-                                     vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 30, 120 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 125, 50 }, red },
-                                     vertex{ position{ 60, 40 }, red },
-                                     vertex{ position{ 30, 120 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
-                                     vertex{ position{ 75, 160 }, red },
-                                     vertex{ position{ 30, 120 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 150, 180 }, red },
-                                     vertex{ position{ 270, 120 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 240, 40 }, red },
-                                     vertex{ position{ 270, 120 }, red },
-                                     vertex{ position{ 175, 50 }, red });
-  interpolated_renderer.add_triangle(vertex{ position{ 220, 160 }, red },
-                                     vertex{ position{ 270, 120 }, red },
-                                     vertex{ position{ 150, 180 }, red });
+  // Right side of heart
 
-  int left_x = 30;
-  int right_x = 270;
-  int top_y = 10;
+  interpolated_renderer.add_triangle(vertex{ position{ 240, 60 }, grey },
+                                     vertex{ position{ 220, 30 }, grey },
+                                     vertex{ position{ 200, 60 }, grey });
+  interpolated_renderer.add_triangle(vertex{ position{ 220, 30 }, grey },
+                                     vertex{ position{ 180, 30 }, grey },
+                                     vertex{ position{ 200, 60 }, grey });
+  interpolated_renderer.add_triangle(vertex{ position{ 160, 60 }, grey },
+                                     vertex{ position{ 180, 30 }, grey },
+                                     vertex{ position{ 200, 60 }, grey });
+
+  // Main trianle of heart
+  interpolated_renderer.add_triangle(vertex{ position{ 80, 60 }, grey },
+                                     vertex{ position{ 160, 180 }, grey },
+                                     vertex{ position{ 240, 60 }, grey });
+
+  edges edg = { position{ 160, 180 }, position{ 80, 60 },  position{ 240, 60 },
+                position{ 100, 30 },  position{ 140, 30 }, position{ 160, 60 },
+                position{ 180, 30 },  position{ 220, 30 } };
+
+  int left_x = 80;
+  int right_x = 240;
+  int top_y = 30;
   int bot_y = 180;
   int mouse_x = 0;
   int mouse_y = 0;
-  uniforms un = { mouse_x, mouse_y, left_x, right_x, top_y, bot_y };
+  uniforms un = {
+    mouse_x, mouse_y, left_x, right_x, top_y, bot_y, 0, 0, edg, 0
+  };
 
   gfx_program* gfx = new gfx_program();
   gfx->set_uniforms(un);
@@ -153,8 +173,8 @@ main(int /*argc*/, char** /*argv*/)
 
     interpolated_renderer.clear(black);
 
-    gfx->set_uniforms(
-      uniforms{ mouse_x, mouse_y, left_x, right_x, top_y, bot_y });
+    gfx->set_uniforms(uniforms{
+      mouse_x, mouse_y, left_x, right_x, top_y, bot_y, 0, 0, edg, event.type });
 
     interpolated_renderer.draw_triangles();
 
