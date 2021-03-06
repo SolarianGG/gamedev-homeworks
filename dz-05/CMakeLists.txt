@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(SDL2 REQUIRED)
 
-add_executable(engine
+add_library(engine STATIC
     ${PROJECT_SOURCE_DIR}/src/engine.cxx
     ${PROJECT_SOURCE_DIR}/src/engine.hxx
     ${PROJECT_SOURCE_DIR}/glad/include/glad/glad.h
@@ -15,12 +15,10 @@ add_executable(engine
     ${PROJECT_SOURCE_DIR}/glad/src/glad.c
     )
 
-set_target_properties(engine PROPERTIES
-    ENABLE_EXPORTS 1)
 
-add_library(game SHARED
+add_executable(game
     ${PROJECT_SOURCE_DIR}/src/game.cxx
     )
 
-target_link_libraries(engine PRIVATE SDL2::SDL2 SDL2::SDL2main)
+target_link_libraries(engine PRIVATE SDL2::SDL2 SDL2::SDL2main -lGL -ldl)
 target_link_libraries(game PRIVATE engine)

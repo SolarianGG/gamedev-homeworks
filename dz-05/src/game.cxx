@@ -1,37 +1,48 @@
 #include "engine.hxx"
 #include <iostream>
-
-class test_game : public game
+int
+main(int /*argc*/, char** /*argv*/)
 {
-  engine& e; // We can easily remove this field but i don't want to do it
-
-public:
-  explicit test_game(engine& e)
-    : e(e)
-  {}
-  void on_event(input& in) override
-  {
-    using namespace std;
-    cout << in << endl;
+  engine* engine = create_engine();
+  bool isGood = engine->init();
+  if (!isGood) {
+    destroy_engine(engine);
+    return 1;
   }
 
-  ~test_game() {}
-};
+  vertex v0 = { 0.3f, -0.3f, -0.5f, 1.0f, 0.f, 0.0f, 1.0f };
+  vertex v1 = { -0.3f, -0.3f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f };
+  vertex v2 = { 0.0f, 0.3f, -0.5f, 1.0f, 0.f, 0.0f, 1.0f };
 
-game*
-create_game(engine* e)
-{
-  if (e == nullptr) {
-    return nullptr;
-  }
-  return new test_game(*e);
-}
+  triangle tr;
+  tr.v[0] = v0;
+  tr.v[1] = v1;
+  tr.v[2] = v2;
+  vertex v3 = { 0.9f, -0.9f, 0.0f, 1.0f, 0.f, 0.f, 1.0f };
+  vertex v4 = { -0.9f, -0.9f, 0.0f, 0.0f, 1.0f, 0.f, 1.0f };
+  vertex v5 = { 0.0f, 0.9f, 0.0f, 0.0f, 0.f, 1.0f, 1.0f };
 
-void
-delete_game(game* g)
-{
-  if (g == nullptr) {
-    return;
+  triangle tr1;
+  tr1.v[0] = v3;
+  tr1.v[1] = v4;
+  tr1.v[2] = v5;
+
+  bool is_loop = true;
+  while (is_loop) {
+    event e;
+    while (engine->read_input(e)) {
+      if (e.event_type == event_quit) {
+        is_loop = false;
+      } else {
+        std::cout << static_cast<char>(e.key) << " is " << e.event_type
+                  << std::endl;
+      }
+    }
+    engine->render_triangle(tr);
+    engine->render_triangle(tr1);
+    engine->swap_buffers();
   }
-  delete g;
+  engine->destroy();
+  destroy_engine(engine);
+  return 0;
 }

@@ -1,38 +1,45 @@
 #pragma once
-
-#include <SDL2/SDL_video.h>
+#include <cstddef>
 #include <string_view>
 
-struct input
+constexpr std::string_view event_quit = "quit";
+constexpr std::string_view event_pressed = "pressed";
+constexpr std::string_view event_reliased = "reliased";
+
+struct event
 {
-  std::string_view key;
+  uint16_t key;
   std::string_view event_type;
+};
+
+struct vertex
+{
+  float x = 0.f;
+  float y = 0.f;
+  float z = 0.f;
+  float r = 0.f;
+  float g = 0.f;
+  float b = 0.f;
+  float a = 0.f;
+};
+
+struct triangle
+{
+  vertex v[3];
 };
 
 class engine
 {
-  SDL_Window* window = nullptr;
-
 public:
-  engine(SDL_Window* window);
-  bool read_input(input& e);
-  void render_triangle();
-  void swap_window();
-  ~engine();
+  virtual ~engine();
+  virtual bool init() = 0;
+  virtual bool read_input(event& e) = 0;
+  virtual void render_triangle(const triangle& t) = 0;
+  virtual void swap_buffers() = 0;
+  virtual void destroy() = 0;
 };
 
-std::ostream&
-operator<<(std::ostream& out, input& e);
-
-class game
-{
-public:
-  virtual void on_event(input& in) = 0;
-  virtual ~game() = default;
-};
-
-extern "C" game*
-create_game(engine* e);
-
-extern "C" void
-delete_game(game* g);
+engine*
+create_engine();
+void
+destroy_engine(engine* e);
