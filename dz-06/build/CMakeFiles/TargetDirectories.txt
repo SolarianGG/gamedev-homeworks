@@ -1,0 +1,4 @@
+/home/matvey/gamedev/homework/gamedev-homeworks/dz-06/build/CMakeFiles/rebuild_cache.dir
+/home/matvey/gamedev/homework/gamedev-homeworks/dz-06/build/CMakeFiles/edit_cache.dir
+/home/matvey/gamedev/homework/gamedev-homeworks/dz-06/build/CMakeFiles/game.dir
+/home/matvey/gamedev/homework/gamedev-homeworks/dz-06/build/CMakeFiles/engine.dir

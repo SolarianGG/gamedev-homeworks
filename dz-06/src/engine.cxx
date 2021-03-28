@@ -1,6 +1,8 @@
 #include "engine.hxx"
 #include "../glad/include/glad/glad.h"
+#include "picopng.hxx"
 #include <SDL2/SDL.h>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
@@ -11,12 +13,14 @@ class engine_impl : public engine
   SDL_Window* window = nullptr;
   SDL_GLContext context = nullptr;
   GLuint program = 0;
+  uint32_t gl_default_vbo = 0;
 
 public:
   bool init() final;
+  float get_time_from_init() final;
   bool read_input(event& e) final;
-  void render_triangle(const triangle& t) final;
-  void set_uniforms(const uniform& un) final;
+  bool load_texture(std::string_view path) final;
+  void render_triangle(const std::vector<vertex>& t, glm::mat4x4 m) final;
   void swap_buffers() final;
   void destroy() final;
 };
@@ -99,27 +103,28 @@ engine_impl::init()
     return false;
   }
 
-  GLuint vertex_buffer = 0;
-  glGenBuffers(1, &vertex_buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-  GLuint vertex_array_object = 0;
-  glGenVertexArrays(1, &vertex_array_object);
-  glBindVertexArray(vertex_array_object);
+  glGenBuffers(1, &gl_default_vbo);
+
+  glBindBuffer(GL_ARRAY_BUFFER, gl_default_vbo);
+
+  uint32_t data_size_in_bytes = 0;
+  glBufferData(GL_ARRAY_BUFFER, data_size_in_bytes, nullptr, GL_STATIC_DRAW);
+
+  glBufferSubData(GL_ARRAY_BUFFER, 0, data_size_in_bytes, nullptr);
 
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 
   const char* vertex_shader_src = R"(
                                   #version 330 core
                                   layout (location = 0) in vec3 a_position;
-                                  layout (location = 1) in vec4 a_color;
+                                  layout (location = 1) in vec2 a_tex_coord;
+                                  uniform mat4x4 t;
+                                  out vec2 v_tex_coord;
 
-                                  out vec4 v_color;
-                                  out vec3 v_position;
                                   void main()
                                   {
-                                     v_color = a_color;
-                                    v_position = a_position;
-                                    gl_Position = vec4(a_position, 1.0);
+                                    v_tex_coord = a_tex_coord;
+                                    gl_Position = t * vec4(a_position, 1.0);
                                   }
                                   )";
   if (!init_shader(vertex_shader, vertex_shader_src)) {
@@ -134,25 +139,16 @@ engine_impl::init()
   GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
   const char* fragment_shader_src = R"(
                                     #version 330 core
-                                    uniform vec2 mouse_position;
 
-                                    in vec4 v_color;
-                                    in vec3 v_position;
+
+                                    in vec2 v_tex_coord;
+                                    uniform sampler2D s_texture;
+
                                     out vec4 frag_color;
 
                                     void main()
                                     {
-                                        float x = mouse_position.x;
-                                        float y = mouse_position.y;
-                                        float dx = x - v_position.x;
-                                        float dy = y - v_position.y;
-                                        if (dx * dx + dy * dy < 0.1 * 0.1){
-                                            frag_color = vec4(0.3, 0.3, 0.3, 1.0);
-                                        }
-                                        else {
-                                            frag_color = v_color;
-                                        }
-
+                                        frag_color = texture(s_texture, v_tex_coord);
                                     }
                                     )";
   if (!init_shader(fragment_shader, fragment_shader_src)) {
@@ -178,7 +174,7 @@ engine_impl::init()
   glAttachShader(program, fragment_shader);
 
   glBindAttribLocation(program, 0, "a_position");
-  glBindAttribLocation(program, 1, "a_color");
+  glBindAttribLocation(program, 1, "a_tex_coord");
 
   glLinkProgram(program);
 
@@ -201,9 +197,36 @@ engine_impl::init()
 
   glUseProgram(program);
 
+  int location = glGetUniformLocation(program, "s_texture");
+
+  int texture_unit = 0;
+  glActiveTexture(GL_TEXTURE0 + texture_unit);
+
+  if (!load_texture("tank.png")) {
+    std::cerr << "error: Failed to load texture ( engine.cxx: 203 )"
+              << std::endl;
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return false;
+  }
+
+  // http://www.khronos.org/opengles/sdk/docs/man/xhtml/glUniform.xml
+  glUniform1i(location, 0 + texture_unit);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_DEPTH_TEST);
 
   return true;
+}
+
+float
+engine_impl::get_time_from_init()
+{
+  uint32_t ticks = SDL_GetTicks();
+  float seconds = ticks * 0.001f;
+  return seconds;
 }
 
 bool
@@ -228,21 +251,74 @@ engine_impl::read_input(event& e)
         e.event_type = event_quit;
         return true;
       }
-      if (event.type == SDL_MOUSEMOTION) {
-        e.mouse_x = event.motion.x;
-        e.mouse_y = event.motion.y;
-        e.event_type = event_motion;
-        return true;
-      }
+      return false;
     }
   }
   return false;
 }
 
-void
-engine_impl::render_triangle(const triangle& t)
+bool
+engine_impl::load_texture(std::string_view path)
 {
-  glBufferData(GL_ARRAY_BUFFER, sizeof(t), &t, GL_STATIC_DRAW);
+  using namespace std;
+  vector<byte> png_file_in_memory;
+  ifstream texture(path.data(), ios::binary);
+  if (!texture.is_open()) {
+    return false;
+  }
+  texture.seekg(0, std::ios_base::end);
+  size_t pos_in_file = static_cast<size_t>(texture.tellg());
+  png_file_in_memory.resize(pos_in_file);
+  texture.seekg(0, std::ios_base::beg);
+  if (!texture) {
+    return false;
+  }
+  texture.read(reinterpret_cast<char*>(png_file_in_memory.data()),
+               static_cast<streamsize>(png_file_in_memory.size()));
+  if (!texture.good()) {
+    return false;
+  }
+  vector<byte> image;
+  uint64_t w = 0;
+  uint64_t h = 0;
+  int error = decodePNG(
+    image, w, h, &png_file_in_memory[0], png_file_in_memory.size(), false);
+  if (error != 0) {
+    cerr << "error: " << error << endl;
+    return false;
+  }
+  GLuint tex_handl = 0;
+  glGenTextures(1, &tex_handl);
+  glBindTexture(GL_TEXTURE_2D, tex_handl);
+
+  GLint mipmap_level = 0;
+  GLint border = 0;
+
+  glTexImage2D(GL_TEXTURE_2D,
+               mipmap_level,
+               GL_RGBA,
+               static_cast<GLsizei>(w),
+               static_cast<GLsizei>(h),
+               border,
+               GL_RGBA,
+               GL_UNSIGNED_BYTE,
+               &image[0]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  return true;
+}
+
+void
+engine_impl::render_triangle(const std::vector<vertex>& t, glm::mat4 m)
+{
+  glBindBuffer(GL_ARRAY_BUFFER, gl_default_vbo);
+  glBufferData(
+    GL_ARRAY_BUFFER, sizeof(vertex) * t.size(), t.data(), GL_STATIC_DRAW);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex) * t.size(), t.data());
+  int location = glGetUniformLocation(program, "t");
+
+  glUniformMatrix4x3fv(location, 1, GL_FALSE, glm::value_ptr(m));
+  // glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(m));
 
   glEnableVertexAttribArray(0);
   GLintptr position_attr_offset = 0;
@@ -254,13 +330,13 @@ engine_impl::render_triangle(const triangle& t)
                         reinterpret_cast<void*>(position_attr_offset));
 
   glEnableVertexAttribArray(1);
-  GLintptr color_attr_offset = sizeof(float) * 3;
+  GLintptr texture_attr_offset = sizeof(float) * 2;
   glVertexAttribPointer(1,
-                        4,
+                        2,
                         GL_FLOAT,
                         GL_FALSE,
                         sizeof(vertex),
-                        reinterpret_cast<void*>(color_attr_offset));
+                        reinterpret_cast<void*>(texture_attr_offset));
   glValidateProgram(program);
 
   // Check the validate status
@@ -280,22 +356,11 @@ engine_impl::render_triangle(const triangle& t)
 }
 
 void
-engine_impl::set_uniforms(const uniform& un)
-{
-  float f0;
-  float f1;
-  f0 = static_cast<float>(un.f0) / static_cast<float>(799) * 2 - 1.0f;
-  f1 = -(static_cast<float>(un.f1) / static_cast<float>(599)) * 2 + 1.0f;
-  int location = glGetUniformLocation(program, "mouse_position");
-  glUniform2f(location, f0, f1);
-}
-
-void
 engine_impl::swap_buffers()
 {
   SDL_GL_SwapWindow(window);
 
-  glClearColor(0.3f, 0.3f, 1.0f, 0.0f);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

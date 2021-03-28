@@ -26,18 +26,23 @@ main(int /*argc*/, char** /*argv*/)
   tr1.v[0] = v3;
   tr1.v[1] = v4;
   tr1.v[2] = v5;
-
+  uniform un = { 0, 0 };
   bool is_loop = true;
   while (is_loop) {
     event e;
     while (engine->read_input(e)) {
       if (e.event_type == event_quit) {
         is_loop = false;
-      } else {
+      } else if (e.event_type == event_motion) {
+        un.f0 = e.mouse_x;
+        un.f1 = e.mouse_y;
+      } else if (e.event_type == event_pressed ||
+                 e.event_type == event_reliased) {
         std::cout << static_cast<char>(e.key) << " is " << e.event_type
                   << std::endl;
       }
     }
+    engine->set_uniforms(un);
     engine->render_triangle(tr);
     engine->render_triangle(tr1);
     engine->swap_buffers();
