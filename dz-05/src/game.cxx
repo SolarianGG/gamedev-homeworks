@@ -665,7 +665,7 @@ main(int /*argc*/, char** /*argv*/)
   };
   for (int i = 0; i < textures.size(); i++) {
       if (!engine->load_texture(textures.at(i), i)) {
-          std::cout << "failed to load texture: " << i << std::endl;
+          std::cout << "failed to load texture: " << textures.at(i) << std::endl;
           return 2;
       }
   }
@@ -917,8 +917,8 @@ main(int /*argc*/, char** /*argv*/)
           }
 
           green_dots_buffer.clear();
-          for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++)
+          for (size_t i = 0; i < 8; i++) {
+            for (size_t j = 0; j < 8; j++)
               way[i][j] = 0;
           }
           black_pawn_buffer.clear();
@@ -933,8 +933,8 @@ main(int /*argc*/, char** /*argv*/)
           white_rook_buffer.clear();
           white_queen_buffer.clear();
           white_king_buffer.clear();
-          for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+          for (size_t i = 0; i < 8; i++) {
+            for (size_t j = 0; j < 8; j++) {
               if (field[i][j] == 0) {
                 continue;
               } else {
