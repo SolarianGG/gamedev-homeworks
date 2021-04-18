@@ -650,8 +650,8 @@ int
 main(int /*argc*/, char** /*argv*/)
 {
   engine* engine = create_engine();
-  bool isGood = engine->init();
-  if (!isGood) {
+  bool isActive = engine->init();
+  if (!isActive) {
     destroy_engine(engine);
     return 1;
   }
@@ -663,67 +663,13 @@ main(int /*argc*/, char** /*argv*/)
     "res/white-horse.png", "res/white-slon.png",  "res/white-rook.png",
     "res/white-queen.png", "res/white-king.png",  "res/green_dot.png"
   };
-  if (!engine->load_texture(textures.at(0), 0)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
+  for (int i = 0; i < textures.size(); i++) {
+      if (!engine->load_texture(textures.at(i), i)) {
+          std::cout << "failed to load texture: " << i << std::endl;
+          return 2;
+      }
   }
-  if (!engine->load_texture(textures.at(1), 1)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(2), 2)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(3), 3)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(4), 4)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(5), 5)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(6), 6)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(7), 7)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(8), 8)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(9), 9)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(10), 10)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(11), 11)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(12), 12)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(13), 13)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-  if (!engine->load_texture(textures.at(14), 14)) {
-    std::cout << "failed to load texture" << std::endl;
-    return 2;
-  }
-
+  
   std::vector<vertex> grid_bricks;
   float start_y = -1.0f;
   for (int i = 0; i < 9; i++) {
@@ -740,13 +686,13 @@ main(int /*argc*/, char** /*argv*/)
   std::vector<vertex> white_bricks;
   cell cells[8][8];
   bool is_black = true;
-  for (int i = 0; i < 8; i++) {
+  for (size_t i = 0; i < 8; i++) {
     if (i % 2 == 0) {
       is_black = true;
     } else {
       is_black = false;
     }
-    for (int j = 0; j < 8; j++) {
+    for (size_t j = 0; j < 8; j++) {
       vertex v0 = { grid_bricks.at(i * 9 + j).x,
                     grid_bricks.at(i * 9 + j).y,
                     grid_bricks.at(i * 9 + j).z,
@@ -829,8 +775,8 @@ main(int /*argc*/, char** /*argv*/)
     {-4, -2, -3, -5, -6, -3, -2, -4}
   };
   // clang-format on
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
+  for (size_t i = 0; i < 8; i++) {
+    for (size_t j = 0; j < 8; j++) {
       if (field[i][j] == 0) {
         continue;
       } else {
@@ -913,7 +859,7 @@ main(int /*argc*/, char** /*argv*/)
   int oldix = 0;
   int oldiy = 0;
   bool is_loop = true;
-  isGood = false;
+  isActive = false;
   bool is_white = true;
   while (is_loop) {
     event e;
@@ -925,20 +871,20 @@ main(int /*argc*/, char** /*argv*/)
 
         int ix = e.mouse_x / 100;
         int iy = std::abs(e.mouse_y - 800) / 100;
-        if (field[iy][ix] == 0 && isGood == false) {
+        if (field[iy][ix] == 0 && isActive == false) {
           continue;
         }
-        if (is_white && field[iy][ix] < 0 && !isGood) {
+        if (is_white && field[iy][ix] < 0 && !isActive) {
           continue;
         }
-        if (!is_white && field[iy][ix] > 0 && !isGood) {
+        if (!is_white && field[iy][ix] > 0 && !isActive) {
           continue;
         }
-        if (isGood == false) {
+        if (isActive == false) {
 
           find_way(field, ix, iy, way);
-          for (int i = 0; i < 8; i++) {
-            for (int j = 0; j < 8; j++) {
+          for (size_t i = 0; i < 8; i++) {
+            for (size_t j = 0; j < 8; j++) {
               if (way[i][j] == 1 || way[i][j] == 2) {
                 vertex v0 = cells[i][j].v0;
                 vertex v1 = cells[i][j].v1;
@@ -958,15 +904,15 @@ main(int /*argc*/, char** /*argv*/)
           }
           oldix = ix;
           oldiy = iy;
-          isGood = true;
-        } else if (isGood == true) {
+          isActive = true;
+        } else if (isActive == true) {
           if (way[iy][ix] == 0) {
-            isGood = false;
+            isActive = false;
           } else if (way[iy][ix] == 1 || way[iy][ix] == 2) {
             field[iy][ix] = field[oldiy][oldix];
             field[oldiy][oldix] = 0;
 
-            isGood = false;
+            isActive = false;
             is_white = !is_white;
           }
 

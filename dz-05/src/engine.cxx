@@ -365,8 +365,8 @@ engine_impl::load_texture(std::string_view path, GLuint tex_handl)
     return false;
   }
   vector<byte> image;
-  uint64_t w = 0;
-  uint64_t h = 0;
+  unsigned long w = 0;
+  unsigned long h = 0;
   int error = decodePNG(
     image, w, h, &png_file_in_memory[0], png_file_in_memory.size(), false);
   if (error != 0) {
