@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(openglesminimal CXX C)
+project(chess_project CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -14,6 +14,7 @@ add_library(engine_05 STATIC
     ${PROJECT_SOURCE_DIR}/glad/include/glad/glad.h
     ${PROJECT_SOURCE_DIR}/glad/include/KHR/khrplatform.h
     ${PROJECT_SOURCE_DIR}/glad/src/glad.c
+     ${PROJECT_SOURCE_DIR}/src/picopng.hxx
     )
 
 
